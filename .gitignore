@@ -1,0 +1,24 @@
+﻿# Datos financieros
+data/
+*.csv
+*.db
+*.sqlite3
+
+# Credenciales
+.env
+.env.*
+!.env.example
+
+# Entorno virtual Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Archivos temporales
+*.log
+.ipynb_checkpoints/
+
+# Configuración local del editor
+.vscode/
+.idea/
