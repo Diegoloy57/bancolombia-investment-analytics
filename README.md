@@ -121,98 +121,213 @@ Los archivos deben ubicarse en:
 
 Los CSV originales no están incluidos en GitHub.
 
+## 6. Instalación y ejecución con Docker
 
-## 6. Configuración del entorno
+Esta solución está diseñada para ejecutarse localmente
+mediante Docker Compose.
+
+El evaluador no necesita instalar PostgreSQL, Django
+ni las dependencias de Python por separado.
 
 ### Requisitos previos
 
-- Python
-- Docker Desktop
-- Git
+- Docker Desktop instalado y en ejecución.
+- Git instalado, o descargar el proyecto como ZIP.
+- Los cinco archivos CSV originales del ejercicio.
 
-### Clonar el repositorio
+### Paso 1. Descargar el repositorio
 
-```bash
+Abrir PowerShell y ejecutar:
+
+```powershell
 git clone https://github.com/Diegoloy57/bancolombia-investment-analytics.git
 cd bancolombia-investment-analytics
 ```
 
-### Crear el entorno virtual en Windows
+Alternativamente, descargar el ZIP desde GitHub
+y extraerlo en una carpeta local.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+### Paso 2. Preparar los archivos de entrada
 
-### Instalar dependencias
-
-```powershell
-pip install -r requirements.txt
-```
-
-### Configurar variables de entorno
-
-Copiar el archivo de ejemplo:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Revisar los valores de conexión a PostgreSQL
-y establecer una contraseña local segura.
-
-El archivo `.env` contiene información privada
-y no debe publicarse en GitHub.
-
-### Preparar los archivos CSV
-
-Crear la carpeta `data/` si no existe:
+Crear la carpeta `data` en la raíz del proyecto
+si no existe:
 
 ```powershell
 New-Item -ItemType Directory -Force data
 ```
 
-Ubicar allí los cinco archivos CSV originales
-antes de ejecutar el inicializador.
+Copiar allí los cinco archivos originales:
+
+```text
+data/
+├── cat_perfil_riesgo.csv
+├── catalogo_activos.csv
+├── catalogo_banca.csv
+├── historico_aba_macroactivos.csv
+└── historico_aba_usd_internacional.csv
 ```
 
+Estos archivos no se encuentran en el repositorio,
+ya que fueron excluidos deliberadamente de Git.
 
-## 7. Ejecutar PostgreSQL y Django
+El evaluador debe utilizar los CSV originales
+suministrados para la prueba técnica.
 
-Iniciar los contenedores:
+### Paso 3. Configurar las variables de entorno
+
+Crear el archivo `.env` a partir de la plantilla:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Abrir `.env` y reemplazar `CHANGE_ME` por una
+contraseña local.
+
+Ejemplo de configuración:
+
+```dotenv
+POSTGRES_HOST=127.0.0.1
+POSTGRES_DB=bancolombia_analytics
+POSTGRES_USER=bancolombia_app
+POSTGRES_PASSWORD=CAMBIAR_POR_CONTRASENA_LOCAL
+POSTGRES_PORT=5433
+```
+
+Docker Compose configura automáticamente la conexión
+interna de Django con PostgreSQL mediante el servicio `db`.
+
+El archivo `.env` no debe publicarse en GitHub.
+
+### Paso 4. Iniciar Docker
+
+Desde la carpeta raíz del proyecto ejecutar:
 
 ```powershell
 docker compose up -d --build
 ```
 
-Comprobar su estado:
+Este comando construye la imagen de Django,
+instala las dependencias de `requirements.txt`
+y levanta PostgreSQL y Django.
+
+Verificar el estado:
 
 ```powershell
 docker compose ps
 ```
 
-El proyecto utiliza PostgreSQL y Django mediante Docker Compose.
+Los servicios `db` y `web` deben aparecer activos.
+PostgreSQL debe indicar un estado saludable.
 
-## 8. Inicialización de la base de datos
+### Paso 5. Inicializar la base de datos
 
-Una vez configurada la conexión y ubicados los CSV en la carpeta `data/`, ejecutar:
+Ejecutar:
 
 ```powershell
-python .\scripts\inicializar_proyecto.py
+docker compose exec web python scripts/inicializar_proyecto.py
 ```
 
-Este proceso realiza:
+El inicializador realiza automáticamente:
 
 1. Creación de los esquemas y tablas RAW.
 2. Carga de los cinco archivos CSV.
-3. Ejecución de consultas de validación.
+3. Validaciones de calidad y catálogos.
 4. Construcción de las vistas CORE.
 5. Construcción de las vistas ANALYTICS.
-6. Verificación de los clientes disponibles.
+6. Verificación de los clientes procesados.
 
-La inicialización fue probada en una base independiente y produjo 32 clientes en la vista de segmentación multidimensional.
+La ejecución correcta debe finalizar con:
 
-**Importante:** el proceso reemplaza el contenido de las tablas RAW mediante TRUNCATE. No debe ejecutarse sobre una base con información que deba conservarse sin realizar previamente una copia de seguridad.
+```text
+INICIALIZACION COMPLETADA
+Clientes disponibles en el modelo: 32
+```
+
+Este resultado corresponde a los archivos originales
+utilizados durante el desarrollo de la solución.
+
+IMPORTANTE: La inicialización reemplaza los datos
+existentes en las tablas RAW. No debe ejecutarse
+sobre una base que contenga información que se
+necesite conservar sin realizar una copia previa.
+
+### Paso 6. Abrir el dashboard
+
+Abrir un navegador web e ingresar a:
+
+http://localhost:8000/dashboard/
+
+El dashboard permite consultar:
+
+- Portafolios de inversión locales en COP.
+- Portafolios internacionales en USD.
+- Distribución por macroactivos.
+- Indicadores de calidad de datos.
+- Características y segmentación de clientes.
+- Concentración internacional por instrumento.
+
+No se requiere publicar el proyecto en internet.
+
+### Paso 7. Detener la aplicación
+
+Para detener los contenedores:
+
+```powershell
+docker compose down
+```
+
+Este comando conserva los datos almacenados
+en el volumen de PostgreSQL.
+
+No utilizar `docker compose down -v` si se desea
+conservar la base de datos.
+
+## 7. Arquitectura de ejecución
+
+Docker Compose administra dos servicios:
+
+**PostgreSQL 17**
+
+- Servicio: `db`
+- Contenedor: `bancolombia_postgres`
+- Puerto local: `5433`
+- Almacenamiento persistente mediante volumen Docker.
+
+**Django**
+
+- Servicio: `web`
+- Contenedor: `bancolombia_django`
+- Puerto local: `8000`
+- Interfaz disponible en `/dashboard/`.
+
+La aplicación Django consulta las vistas SQL
+de PostgreSQL para presentar los indicadores.
+
+Flujo:
+
+CSV → RAW → CORE → ANALYTICS → DJANGO → DASHBOARD
+
+## 8. Reproducibilidad
+
+La solución fue validada mediante Docker Compose.
+
+En la ejecución de referencia se obtuvieron:
+
+- 5 archivos CSV cargados.
+- 12.474 registros de entrada.
+- 16 scripts SQL ejecutados correctamente.
+- 32 clientes identificados.
+
+El proyecto utiliza un volumen local para compartir
+los archivos del repositorio con el contenedor Django.
+
+Por ello, los CSV deben encontrarse en `data/`
+antes de ejecutar el inicializador.
+
+Los resultados pueden variar si se utilizan
+archivos de entrada diferentes.
+```
 
 ## 9. Dashboard
 
