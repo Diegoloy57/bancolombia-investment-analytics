@@ -34,4 +34,11 @@ urlpatterns = [
         views.segmentacion_clientes,
         name="segmentacion_clientes"
     ),
+    
+    path(
+        "concentracion-internacional/",
+        views.concentracion_internacional,
+        name="concentracion_internacional"
+    ),
+
 ]

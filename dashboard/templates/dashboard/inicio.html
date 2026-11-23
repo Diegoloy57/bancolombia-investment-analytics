@@ -1064,6 +1064,118 @@
 </section>
 
 
+<!-- CONCENTRACION INTERNACIONAL -->
+
+<section class="mb-4" id="concentracion-internacional">
+
+    <div class="dashboard-card p-4">
+
+        <h2 class="section-title">
+            Concentración del portafolio internacional
+        </h2>
+
+        <p class="text-muted">
+            Identificación del instrumento de mayor valor
+            en el portafolio internacional de cada cliente.
+        </p>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Revisión prioritaria
+                    </p>
+                    <h3 id="internacional-prioritaria">--</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Seguimiento
+                    </p>
+                    <h3 id="internacional-seguimiento">--</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Concentración menor
+                    </p>
+                    <h3 id="internacional-menor">--</h3>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-5">
+
+                <h3 class="h6">
+                    Clasificación de clientes
+                </h3>
+
+                <div style="height: 280px;">
+                    <canvas id="grafico-concentracion-internacional"></canvas>
+                </div>
+
+            </div>
+
+            <div class="col-lg-7">
+
+                <h3 class="h6">
+                    Instrumento principal por cliente
+                </h3>
+
+                <div class="table-responsive"
+                     style="max-height: 350px; overflow-y: auto;">
+
+                    <table class="table table-sm table-hover">
+
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Instrumento</th>
+                                <th>Valor USD</th>
+                                <th>Concentración</th>
+                                <th>Clasificación</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-concentracion-internacional">
+                            <tr>
+                                <td colspan="5">
+                                    Cargando análisis...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <p class="small text-muted mt-3 mb-0">
+            Clasificación exploratoria: revisión prioritaria
+            desde el 90 %, seguimiento desde el 50 % y
+            concentración menor por debajo del 50 %.
+            La concentración por instrumento no equivale
+            a una evaluación integral del riesgo.
+            Los datos corresponden a posiciones históricas.
+        </p>
+
+    </div>
+
+</section>
+
+
+
     </main>
 
     <!-- PIE DE PÁGINA -->
@@ -1790,4 +1902,133 @@ document.addEventListener("DOMContentLoaded", async function () {
 </script>
 
 </body>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const tabla = document.getElementById(
+        "tabla-concentracion-internacional"
+    );
+
+    try {
+        const respuesta = await fetch(
+            "{% url 'concentracion_internacional' %}"
+        );
+
+        if (!respuesta.ok) {
+            throw new Error("Error al consultar los datos");
+        }
+
+        const datos = await respuesta.json();
+        const clientes = datos.clientes;
+
+        const prioritaria = clientes.filter(
+            c => c.clasificacion === "REVISION_PRIORITARIA"
+        ).length;
+
+        const seguimiento = clientes.filter(
+            c => c.clasificacion === "SEGUIMIENTO"
+        ).length;
+
+        const menor = clientes.filter(
+            c => c.clasificacion === "CONCENTRACION_MENOR"
+        ).length;
+
+        document.getElementById(
+            "internacional-prioritaria"
+        ).textContent = prioritaria;
+
+        document.getElementById(
+            "internacional-seguimiento"
+        ).textContent = seguimiento;
+
+        document.getElementById(
+            "internacional-menor"
+        ).textContent = menor;
+
+        // Grafica de distribucion
+        const canvas = document.getElementById(
+            "grafico-concentracion-internacional"
+        );
+
+        new Chart(canvas, {
+            type: "doughnut",
+            data: {
+                labels: [
+                    "Revisión prioritaria",
+                    "Seguimiento",
+                    "Concentración menor"
+                ],
+                datasets: [{
+                    data: [
+                        prioritaria,
+                        seguimiento,
+                        menor
+                    ],
+                    backgroundColor: [
+                        "#dc3545",
+                        "#ffc107",
+                        "#198754"
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+
+        // Tabla de clientes
+        tabla.innerHTML = "";
+
+        const formatoUSD = new Intl.NumberFormat(
+            "es-CO",
+            {
+                style: "currency",
+                currency: "USD"
+            }
+        );
+
+        clientes.forEach(cliente => {
+
+            const fila = document.createElement("tr");
+
+            const valores = [
+                cliente.id_sistema_cliente,
+                cliente.nombre_activo,
+                formatoUSD.format(
+                    Number(cliente.valor_principal_usd)
+                ),
+                Number(
+                    cliente.concentracion_porcentaje
+                ).toFixed(2) + " %",
+                cliente.clasificacion.replaceAll("_", " ")
+            ];
+
+            valores.forEach(valor => {
+                const celda = document.createElement("td");
+                celda.textContent = valor;
+                fila.appendChild(celda);
+            });
+
+            tabla.appendChild(fila);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        tabla.innerHTML =
+            '<tr><td colspan="5">' +
+            'No fue posible cargar el análisis.' +
+            '</td></tr>';
+    }
+});
+</script>
+
 </html>

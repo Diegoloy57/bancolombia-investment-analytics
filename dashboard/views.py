@@ -228,3 +228,30 @@ def segmentacion_clientes(request):
         "clientes": clientes
     })
 
+def concentracion_internacional(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                id_sistema_cliente,
+                activos_distintos,
+                activo_principal,
+                nombre_activo,
+                total_usd,
+                valor_principal_usd,
+                concentracion_porcentaje,
+                clasificacion
+            FROM analytics.vw_concentracion_internacional
+            ORDER BY concentracion_porcentaje DESC
+        """)
+
+        columnas = [col[0] for col in cursor.description]
+        clientes = [
+            dict(zip(columnas, fila))
+            for fila in cursor.fetchall()
+        ]
+
+    return JsonResponse({
+        "total_clientes": len(clientes),
+        "clientes": clientes
+    }, json_dumps_params={"default": str})
+
