@@ -1,0 +1,816 @@
+
+/* ==========================================
+   INVESTMENT ANALYTICS
+   Diseño financiero premium
+   ========================================== */
+
+/* 1. VARIABLES */
+
+:root {
+    --color-primary: #171717;
+    --color-primary-soft: #292929;
+    --color-accent: #fdda24;
+    --color-accent-hover: #f4c900;
+
+    --color-background: #f5f6fa;
+    --color-surface: #ffffff;
+    --color-text: #202331;
+    --color-muted: #72798b;
+    --color-border: #e8eaf1;
+
+    --color-blue: #4263eb;
+    --color-blue-soft: #eef2ff;
+
+    --color-green: #159b70;
+    --color-green-soft: #e9f9f2;
+
+    --color-orange: #f39b37;
+
+    --radius-card: 22px;
+
+    --shadow-card:
+        0 12px 35px rgba(31, 38, 62, 0.055);
+
+    --shadow-hover:
+        0 20px 45px rgba(31, 38, 62, 0.11);
+
+    --transition: all 0.25s ease;
+}
+
+/* 2. ESTILOS GENERALES */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 92% 12%,
+            rgba(253, 218, 36, 0.11),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 5% 65%,
+            rgba(66, 99, 235, 0.045),
+            transparent 30%
+        ),
+        var(--color-background);
+
+    color: var(--color-text);
+
+    font-family:
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: var(--color-primary);
+}
+
+/* 3. NAVEGACIÓN */
+
+.navbar-custom {
+    position: relative;
+
+    background:
+        linear-gradient(
+            110deg,
+            #151515 0%,
+            #262626 75%,
+            #343434 100%
+        );
+
+    padding: 19px 0;
+
+    border-bottom:
+        4px solid var(--color-accent);
+
+    box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.13);
+
+    overflow: hidden;
+}
+
+.navbar-custom::after {
+    content: "";
+
+    position: absolute;
+    top: -70px;
+    right: 8%;
+
+    width: 230px;
+    height: 230px;
+
+    border-radius: 50%;
+
+    border:
+        35px solid rgba(253, 218, 36, 0.06);
+
+    pointer-events: none;
+}
+
+.brand-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 1.15rem;
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+}
+
+.brand-title::before {
+    content: "";
+
+    display: inline-block;
+
+    width: 13px;
+    height: 28px;
+
+    border-radius: 4px;
+
+    background: var(--color-accent);
+
+    transform: skew(-12deg);
+
+    box-shadow:
+        7px 0 0 rgba(253, 218, 36, 0.35);
+}
+
+/* 4. ENCABEZADO */
+
+.page-header {
+    position: relative;
+    padding: 48px 0 34px;
+}
+
+.page-header::before {
+    content: "INVESTMENT / ANALYTICS";
+
+    display: inline-block;
+
+    margin-bottom: 14px;
+    padding: 8px 13px;
+
+    border-radius: 30px;
+
+    background: #fff4bd;
+    color: #6d5700;
+
+    font-size: 0.66rem;
+    font-weight: 800;
+
+    letter-spacing: 1.6px;
+}
+
+.page-title {
+    margin-bottom: 12px;
+
+    font-size:
+        clamp(2rem, 3.7vw, 3rem);
+
+    font-weight: 800;
+
+    line-height: 1.15;
+    letter-spacing: -1.3px;
+
+    color: var(--color-primary);
+}
+
+.text-muted-custom {
+    color: var(--color-muted);
+
+    font-size: 0.95rem;
+    line-height: 1.75;
+}
+
+/* 5. TARJETAS GENERALES */
+
+.dashboard-card {
+    position: relative;
+
+    height: 100%;
+
+    background: var(--color-surface);
+
+    border:
+        1px solid var(--color-border);
+
+    border-radius: var(--radius-card);
+
+    box-shadow: var(--shadow-card);
+
+    transition: var(--transition);
+
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow: var(--shadow-hover);
+
+    border-color: #dfe2eb;
+}
+
+/* 6. SELECTOR DE CLIENTE */
+
+section[aria-labelledby="selector-title"]
+.dashboard-card {
+    background:
+        linear-gradient(
+            125deg,
+            #ffffff 0%,
+            #ffffff 73%,
+            #fffbea 100%
+        );
+
+    border:
+        1px solid #f0e9ca;
+}
+
+section[aria-labelledby="selector-title"]
+.dashboard-card::before {
+    content: "";
+
+    position: absolute;
+
+    right: -65px;
+    top: -95px;
+
+    width: 230px;
+    height: 230px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(253, 218, 36, 0.10);
+
+    pointer-events: none;
+}
+
+.section-title {
+    font-size: 1.13rem;
+    font-weight: 750;
+
+    letter-spacing: -0.4px;
+
+    color: var(--color-text);
+}
+
+.form-label {
+    color: #525b6b;
+
+    font-size: 0.86rem;
+    font-weight: 650;
+}
+
+.form-select {
+    min-height: 51px;
+
+    border:
+        1px solid #dfe3ec;
+
+    border-radius: 13px;
+
+    background-color: #ffffff;
+
+    color: var(--color-text);
+
+    font-size: 0.95rem;
+
+    transition: var(--transition);
+}
+
+.form-select-lg {
+    font-size: 0.95rem;
+}
+
+.form-select:hover {
+    border-color: #b9c0d0;
+}
+
+.form-select:focus {
+    border-color: #e0b800;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(253, 218, 36, 0.18);
+}
+
+/* 7. BOTÓN PRINCIPAL */
+
+.btn-success {
+    min-height: 51px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fdda24,
+            #f4c915
+        );
+
+    border: 1px solid #efc914;
+
+    border-radius: 13px;
+
+    color: #171717;
+
+    font-size: 0.95rem;
+    font-weight: 750;
+
+    box-shadow:
+        0 6px 14px
+        rgba(253, 218, 36, 0.22);
+
+    transition: var(--transition);
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background:
+        linear-gradient(
+            135deg,
+            #ffe34c,
+            #fdda24
+        );
+
+    border-color: #e8bf00;
+
+    color: #171717;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 20px
+        rgba(253, 218, 36, 0.32);
+}
+
+.btn-success:active {
+    transform: translateY(0);
+}
+
+/* 8. RESUMEN DEL CLIENTE */
+
+section[aria-labelledby="cliente-title"] {
+    padding: 8px 2px;
+}
+
+section[aria-labelledby="cliente-title"]
+.section-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.badge {
+    font-weight: 650;
+    letter-spacing: 0.15px;
+}
+
+.badge.text-bg-light {
+    background: #f7f8fb !important;
+
+    color: #626b7c !important;
+
+    border-color: #e9ebf2 !important;
+
+    border-radius: 9px;
+
+    padding: 7px 11px;
+}
+
+.status-dot {
+    display: inline-block;
+
+    width: 9px;
+    height: 9px;
+
+    margin-right: 6px;
+
+    border-radius: 50%;
+
+    background: var(--color-green);
+
+    box-shadow:
+        0 0 0 4px
+        rgba(21, 155, 112, 0.11);
+}
+
+/* 9. TARJETAS FINANCIERAS */
+
+section[aria-label="Resumen financiero"]
+.dashboard-card {
+    padding-top: 12px !important;
+}
+
+/* Ambas tarjetas con línea azul */
+
+section[aria-label="Resumen financiero"]
+.dashboard-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 6px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #4263eb,
+            #8aa0ff
+        );
+}
+
+/* Decoración suave, también azul */
+
+section[aria-label="Resumen financiero"]
+.dashboard-card::after {
+    content: "";
+
+    position: absolute;
+
+    top: 68px;
+    right: -45px;
+
+    width: 160px;
+    height: 160px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(66, 99, 235, 0.075),
+            transparent 72%
+        );
+
+    pointer-events: none;
+}
+
+/* Títulos de portafolio */
+
+section[aria-label="Resumen financiero"]
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 750;
+
+    letter-spacing: -0.4px;
+}
+
+/* Etiquetas */
+
+.card-heading {
+    margin-bottom: 11px;
+
+    color: var(--color-muted);
+
+    font-size: 0.83rem;
+    font-weight: 650;
+
+    letter-spacing: 0.2px;
+}
+
+/* VALORES PRINCIPALES
+   Negro grafito, más delgados y legibles */
+
+.metric-value {
+    font-size:
+        clamp(1.65rem, 2.6vw, 2.35rem);
+
+    font-weight: 600;
+
+    letter-spacing: -0.65px;
+
+    line-height: 1.35;
+
+    color: #242424;
+
+    overflow-wrap: anywhere;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.dashboard-card .metric-value {
+    margin-bottom: 8px;
+}
+
+/* Mismo color para valores locales
+   e internacionales */
+
+section[aria-label="Resumen financiero"]
+.metric-value:not(.text-warning) {
+    color: #242424;
+}
+
+/* Etiquetas secundarias */
+
+.metric-label {
+    color: var(--color-muted);
+
+    font-size: 0.85rem;
+
+    line-height: 1.6;
+}
+
+.dashboard-card .metric-label {
+    line-height: 1.6;
+}
+
+/* Separadores */
+
+.metric-divider {
+    height: 1px;
+
+    margin: 25px 0;
+
+    border: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            #e4e7ee,
+            #f6f7fa
+        );
+}
+
+/* Datos secundarios */
+
+section[aria-label="Resumen financiero"]
+.d-flex.justify-content-between strong {
+    color: #303646;
+
+    font-weight: 650;
+
+    text-align: right;
+
+    overflow-wrap: anywhere;
+}
+
+/* Advertencias */
+
+.metric-value.text-warning {
+    color: #b87516 !important;
+}
+
+.badge.text-bg-warning {
+    background: #fff0cc !important;
+
+    color: #936000 !important;
+
+    border-radius: 8px;
+
+    padding: 6px 10px;
+}
+
+/* 10. NOTA METODOLÓGICA */
+
+.alert.alert-light {
+    position: relative;
+
+    padding: 22px 25px;
+
+    background:
+        linear-gradient(
+            110deg,
+            #eef3ff,
+            #f8faff
+        );
+
+    border:
+        1px solid #dce6ff !important;
+
+    border-radius: 16px;
+
+    color: #4d5b76;
+
+    font-size: 0.89rem;
+
+    line-height: 1.85;
+
+    box-shadow:
+        0 6px 20px
+        rgba(66, 99, 235, 0.035);
+}
+
+.alert.alert-light strong {
+    color: #314aa0;
+
+    font-weight: 750;
+}
+
+/* 11. ESTADO INICIAL */
+
+.empty-state {
+    position: relative;
+
+    min-height: 230px;
+
+    padding: 65px 25px;
+
+    text-align: center;
+
+    color: var(--color-muted);
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(253, 218, 36, 0.13),
+            transparent 60%
+        ),
+        #ffffff;
+}
+
+.empty-state::before {
+    content: "↗";
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 56px;
+    height: 56px;
+
+    margin: 0 auto 20px;
+
+    border-radius: 18px;
+
+    background: #fff4bb;
+
+    color: #2c2c2c;
+
+    font-size: 1.8rem;
+    font-weight: 800;
+
+    transform: rotate(-8deg);
+}
+
+.empty-state .section-title {
+    margin-bottom: 12px;
+
+    font-size: 1.35rem;
+}
+
+.empty-state p {
+    max-width: 480px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    line-height: 1.8;
+}
+
+/* 12. PIE DE PÁGINA */
+
+.footer {
+    margin-top: 30px;
+
+    padding: 30px 0;
+
+    border-top:
+        1px solid var(--color-border);
+
+    color: #8a91a0;
+
+    font-size: 0.81rem;
+}
+
+.footer span:first-child {
+    color: #424958;
+    font-weight: 750;
+}
+
+/* 13. ACCESIBILIDAD */
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+    outline:
+        3px solid var(--color-accent);
+
+    outline-offset: 3px;
+}
+
+/* 14. RESPONSIVE */
+
+@media (max-width: 991px) {
+
+    .page-header {
+        padding-top: 38px;
+    }
+
+    section[aria-label="Resumen financiero"]
+    .dashboard-card {
+        height: 100%;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .page-header {
+        padding: 30px 0 24px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .dashboard-card {
+        border-radius: 18px;
+    }
+
+    .row > div > .dashboard-card {
+        height: auto;
+    }
+
+    .metric-value {
+        font-size: 1.9rem;
+    }
+
+    .navbar-custom {
+        padding: 16px 0;
+    }
+
+    .alert.alert-light {
+        padding: 18px;
+    }
+
+}
+
+@media (max-width: 576px) {
+
+    .page-header::before {
+        font-size: 0.59rem;
+        letter-spacing: 1px;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+    }
+
+    .brand-title {
+        font-size: 1rem;
+    }
+
+    .dashboard-card {
+        border-radius: 16px;
+    }
+
+    .dashboard-card.p-4 {
+        padding: 22px !important;
+    }
+
+    .metric-value {
+        font-size: 1.65rem;
+        letter-spacing: -0.4px;
+    }
+
+    .section-title {
+        font-size: 1.05rem;
+    }
+
+    .empty-state {
+        padding: 45px 20px;
+    }
+
+    .footer {
+        font-size: 0.75rem;
+    }
+
+}
+
+/* 15. MOVIMIENTO REDUCIDO */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        transition-duration:
+            0.01ms !important;
+
+        animation-duration:
+            0.01ms !important;
+    }
+
+}

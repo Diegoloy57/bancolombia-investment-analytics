@@ -1,0 +1,1793 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+          content="Dashboard de análisis de portafolios de inversión.">
+
+    <title>Investment Analytics | Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Estilos generales del proyecto -->
+    <link rel="stylesheet"
+          href="{% static 'dashboard/css/styles.css' %}">
+
+    <!-- Chart.js -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"
+        defer>
+    </script>
+
+    <style>
+        /* TARJETAS Y GRÁFICOS */
+
+        .chart-card,
+        .quality-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-card::before,
+        .quality-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(
+                90deg,
+                #4263eb,
+                #8aa0ff
+            );
+        }
+
+        .chart-subtitle {
+            color: #687386;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        /* VALORES FINANCIEROS */
+
+        .financial-amount {
+            color: #242424;
+            font-size: clamp(1.6rem, 3vw, 2.15rem);
+            font-weight: 700;
+            letter-spacing: -0.7px;
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .currency-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #fff8df;
+            border: 1px solid #f3e2a5;
+            border-radius: 9px;
+            color: #725b12;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .currency-label.international {
+            background: #edf4ff;
+            border-color: #d9e5ff;
+            color: #315c9a;
+        }
+
+        .currency-code {
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .currency-note {
+            font-size: 0.76rem;
+            font-weight: 400;
+        }
+
+        /* GRÁFICO DE DISTRIBUCIÓN */
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .chart-legend-item:last-child {
+            border-bottom: 0;
+        }
+
+        .chart-legend-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            color: #303746;
+            font-size: 0.94rem;
+        }
+
+        .chart-legend-dot {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chart-legend-numbers {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .chart-legend-percent {
+            display: block;
+            color: #242424;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .chart-legend-value {
+            display: block;
+            color: #788293;
+            font-size: 0.8rem;
+            margin-top: 3px;
+        }
+
+        .chart-state {
+            padding: 45px 16px;
+            text-align: center;
+            color: #687386;
+        }
+
+        .chart-summary {
+            padding: 16px 18px;
+            background: #f5f7fc;
+            border: 1px solid #e9edf7;
+            border-radius: 14px;
+        }
+
+        .chart-summary-label {
+            font-size: 0.85rem;
+            color: #687386;
+        }
+
+        .chart-summary-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #242424;
+            overflow-wrap: anywhere;
+        }
+
+        /* CALIDAD DE DATOS */
+
+        .quality-card {
+            height: 100%;
+        }
+
+        .quality-description {
+            color: #687386;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            min-height: 65px;
+        }
+
+        .quality-score {
+            color: #242424;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.6px;
+        }
+
+        .quality-progress {
+            height: 10px;
+            background: #e9edf5;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .quality-progress-fill {
+            height: 100%;
+            width: 0;
+            background: #238b69;
+            transition: width 0.4s ease;
+        }
+
+        .quality-progress-fill.warning {
+            background: #e9ad43;
+        }
+
+        .quality-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 0;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .quality-stat:last-child {
+            border-bottom: 0;
+        }
+
+        .quality-stat-name {
+            color: #5e6879;
+            font-size: 0.92rem;
+        }
+
+        .quality-stat-number {
+            color: #242424;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .quality-note {
+            color: #687386;
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+
+        .quality-state {
+            padding: 30px 0;
+            color: #687386;
+        }
+
+        .quality-explanation {
+            margin-top: 20px;
+            padding: 12px 14px;
+            background: #f5f7fc;
+            border-radius: 10px;
+            color: #5e6879;
+            font-size: 0.83rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 576px) {
+            .currency-label {
+                flex-wrap: wrap;
+            }
+
+            .quality-description {
+                min-height: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BARRA DE NAVEGACIÓN -->
+
+    <header>
+        <nav class="navbar navbar-dark navbar-custom">
+            <div class="container">
+                <span class="navbar-brand brand-title mb-0">
+                    Investment Analytics
+                </span>
+
+                <span class="text-white-50 small d-none d-sm-inline">
+                    Análisis de portafolios
+                </span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <!-- ENCABEZADO -->
+
+        <section class="page-header">
+            <h1 class="page-title mb-2">
+                Dashboard de inversiones
+            </h1>
+
+            <p class="text-muted-custom mb-0">
+                Consulta y análisis de portafolios locales
+                e internacionales.
+            </p>
+        </section>
+
+        <!-- SELECTOR DE CLIENTES -->
+
+        <section aria-labelledby="selector-title" class="mb-4">
+            <div class="dashboard-card p-4">
+
+                <h2 id="selector-title" class="section-title mb-3">
+                    Selección de cliente
+                </h2>
+
+                <form method="get" action="{% url 'inicio' %}">
+                    <div class="row align-items-end g-3">
+
+                        <div class="col-md-8">
+                            <label for="cliente"
+                                   class="form-label fw-semibold">
+                                Identificador del cliente
+                            </label>
+
+                            <select
+                                id="cliente"
+                                name="cliente"
+                                class="form-select form-select-lg"
+                                onchange="this.form.requestSubmit()"
+                            >
+                                <option value="">
+                                    Seleccione un cliente
+                                </option>
+
+                                {% for cliente in clientes %}
+                                    <option
+                                        value="{{ cliente }}"
+                                        {% if cliente == cliente_seleccionado %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ cliente }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <button
+                                type="submit"
+                                class="btn btn-success btn-lg w-100"
+                            >
+                                Consultar portafolio
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+        </section>
+
+        {% if cliente_seleccionado %}
+
+            <!-- RESUMEN DEL CLIENTE -->
+
+            <section class="mb-4" aria-labelledby="cliente-title">
+
+                <div class="d-flex flex-wrap
+                            justify-content-between
+                            align-items-center gap-2">
+
+                    <div>
+                        <h2 id="cliente-title"
+                            class="section-title mb-1">
+                            Resumen del cliente
+                        </h2>
+
+                        <p class="text-muted-custom mb-0">
+                            ID: {{ cliente_seleccionado }}
+                        </p>
+                    </div>
+
+                    <span class="badge text-bg-light border p-2">
+                        <span class="status-dot"></span>
+                        Consulta disponible
+                    </span>
+
+                </div>
+            </section>
+
+            <!-- TARJETAS FINANCIERAS -->
+
+            <section aria-label="Resumen financiero" class="mb-4">
+                <div class="row g-4">
+
+                    <!-- PORTAFOLIO LOCAL -->
+
+                    <div class="col-12 col-lg-6">
+                        <article class="dashboard-card p-4">
+
+                            <div class="d-flex justify-content-between
+                                        align-items-start gap-2">
+
+                                <h3 class="section-title mb-0">
+                                    Portafolio local
+                                </h3>
+
+                                <span class="badge text-bg-light border">
+                                    Local
+                                </span>
+                            </div>
+
+                            <div class="mt-4">
+
+                                <p class="card-heading mb-2">
+                                    Valor ABA reportado
+                                </p>
+
+                                {% if local %}
+
+                                    {% if local.2 != None %}
+
+                                        <div
+                                            class="financial-amount"
+                                            data-financial-value="{{ local.2|floatformat:2 }}"
+                                        >
+                                            {{ local.2|floatformat:2 }}
+                                        </div>
+
+                                    {% else %}
+
+                                        <div class="financial-amount">
+                                            Sin valor válido
+                                        </div>
+
+                                        <p class="small text-muted mt-2">
+                                            Las inversiones registradas
+                                            requieren revisión antes
+                                            de calcular el total.
+                                        </p>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <div class="financial-amount">
+                                        Sin información
+                                    </div>
+
+                                {% endif %}
+
+                                <div class="currency-label">
+                                    <span class="currency-code">
+                                        COP
+                                    </span>
+                                    <span class="currency-note">
+                                        Portafolio local · Unidad ABA por confirmar
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <div class="metric-divider"></div>
+
+                            {% if local %}
+
+                                <div class="d-flex justify-content-between
+                                            gap-3 mb-3">
+
+                                    <span class="metric-label">
+                                        Registros de inversión
+                                    </span>
+
+                                    <strong>{{ local.1 }}</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between
+                                            gap-3">
+
+                                    <span class="metric-label">
+                                        Fecha del portafolio
+                                    </span>
+
+                                    <strong>
+                                        {{ local.0|date:"d/m/Y" }}
+                                    </strong>
+                                </div>
+
+                            {% else %}
+
+                                <p class="text-muted-custom mb-0">
+                                    Este cliente no tiene registros
+                                    en el portafolio local.
+                                </p>
+
+                            {% endif %}
+
+                        </article>
+                    </div>
+
+                    <!-- PORTAFOLIO INTERNACIONAL -->
+
+                    <div class="col-12 col-lg-6">
+                        <article class="dashboard-card p-4">
+
+                            <div class="d-flex justify-content-between
+                                        align-items-start gap-2">
+
+                                <h3 class="section-title mb-0">
+                                    Portafolio internacional
+                                </h3>
+
+                                <span class="badge text-bg-light border">
+                                    Internacional
+                                </span>
+                            </div>
+
+                            <div class="mt-4">
+
+                                <p class="card-heading mb-2">
+                                    Valor de mercado reportado
+                                </p>
+
+                                {% if internacional %}
+
+                                    {% if internacional.4 != None %}
+
+                                        <div
+                                            class="financial-amount"
+                                            data-financial-value="{{ internacional.4|floatformat:2 }}"
+                                        >
+                                            {{ internacional.4|floatformat:2 }}
+                                        </div>
+
+                                    {% else %}
+
+                                        <div class="financial-amount">
+                                            Sin valor válido
+                                        </div>
+
+                                        <p class="small text-muted mt-2">
+                                            Ninguna inversión registrada
+                                            es apta para calcular el valor
+                                            del portafolio.
+                                        </p>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <div class="financial-amount">
+                                        Sin información
+                                    </div>
+
+                                {% endif %}
+
+                                <div class="currency-label international">
+                                    <span class="currency-code">
+                                        USD
+                                    </span>
+                                    <span class="currency-note">
+                                        Según archivo de origen · Por confirmar
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <div class="metric-divider"></div>
+
+                            {% if internacional %}
+
+                                <div class="d-flex justify-content-between
+                                            gap-3 mb-3">
+
+                                    <span class="metric-label">
+                                        Registros de inversión
+                                    </span>
+
+                                    <strong>
+                                        {{ internacional.1 }}
+                                    </strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between
+                                            gap-3 mb-3">
+
+                                    <span class="metric-label">
+                                        Aptos para agregación
+                                    </span>
+
+                                    <strong>
+                                        {{ internacional.2 }}
+                                    </strong>
+                                </div>
+
+                                <div class="d-flex justify-content-between
+                                            gap-3 mb-3">
+
+                                    <span class="metric-label">
+                                        En revisión
+                                    </span>
+
+                                    {% if internacional.3 > 0 %}
+
+                                        <span class="badge text-bg-warning">
+                                            {{ internacional.3 }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <strong>0</strong>
+
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex justify-content-between
+                                            gap-3">
+
+                                    <span class="metric-label">
+                                        Fecha del portafolio
+                                    </span>
+
+                                    <strong>
+                                        {{ internacional.0|date:"d/m/Y" }}
+                                    </strong>
+                                </div>
+
+                            {% else %}
+
+                                <p class="text-muted-custom mb-0">
+                                    Este cliente no tiene registros
+                                    en el portafolio internacional.
+                                </p>
+
+                            {% endif %}
+
+                        </article>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- DISTRIBUCIÓN DE INVERSIONES -->
+
+            <section class="mb-4"
+                     aria-labelledby="distribucion-title">
+
+                <div class="dashboard-card chart-card p-4">
+
+                    <div class="d-flex flex-wrap
+                                justify-content-between
+                                align-items-start gap-3 mb-4">
+
+                        <div>
+                            <h2 id="distribucion-title"
+                                class="section-title mb-2">
+                                Distribución de inversiones
+                            </h2>
+
+                            <p class="chart-subtitle mb-0">
+                                Composición del portafolio local
+                                por tipo de macroactivo.
+                            </p>
+                        </div>
+
+                        <span class="badge text-bg-light border p-2">
+                            Portafolio local
+                        </span>
+                    </div>
+
+                    <div id="chart-loading"
+                         class="chart-state"
+                         role="status">
+                        Cargando distribución de inversiones...
+                    </div>
+
+                    <div id="chart-error"
+                         class="chart-state d-none"
+                         role="status">
+                    </div>
+
+                    <div id="chart-content" class="d-none">
+
+                        <div class="row g-4 align-items-center">
+
+                            <div class="col-12 col-lg-6">
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="graficoMacroactivo"
+                                        role="img"
+                                        aria-label="Distribución del valor ABA por macroactivo"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+                            <div class="col-12 col-lg-6">
+
+                                <h3 class="section-title mb-3">
+                                    Composición del portafolio
+                                </h3>
+
+                                <div id="chart-legend"></div>
+
+                                <div class="chart-summary mt-4">
+
+                                    <div class="chart-summary-label">
+                                        Total ABA de categorías graficadas
+                                    </div>
+
+                                    <div id="chart-total"
+                                         class="chart-summary-value mt-1">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <p class="small text-muted mt-4 mb-0">
+                            Los porcentajes se calculan sobre
+                            el total positivo de las categorías
+                            graficadas. Los valores nulos o
+                            no positivos no se representan
+                            en la dona.
+                            Unidad del valor ABA pendiente
+                            de confirmación.
+                        </p>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- CALIDAD DE DATOS -->
+
+            <section class="mb-4"
+                     aria-labelledby="calidad-title">
+
+                <div class="mb-3">
+
+                    <h2 id="calidad-title"
+                        class="section-title mb-2">
+                        Calidad de datos
+                    </h2>
+
+                    <p class="chart-subtitle mb-0">
+                        Validación de los registros de inversión
+                        e identificación de observaciones
+                        que requieren revisión.
+                    </p>
+
+                </div>
+
+                <div class="row g-4">
+
+                    <!-- IDENTIFICACIÓN LOCAL -->
+
+                    <div class="col-12 col-lg-6">
+
+                        <article class="dashboard-card quality-card p-4">
+
+                            <div class="d-flex justify-content-between
+                                        align-items-start gap-2 mb-3">
+
+                                <h3 class="section-title mb-0">
+                                    Identificación de inversiones locales
+                                </h3>
+
+                                <span class="badge text-bg-light border">
+                                    Local
+                                </span>
+
+                            </div>
+
+                            <p class="quality-description">
+                                Porcentaje de registros de inversión
+                                que están identificados en el catálogo
+                                de activos.
+                            </p>
+
+                            <div id="quality-local-loading"
+                                 class="quality-state"
+                                 role="status">
+                                Cargando indicadores...
+                            </div>
+
+                            <div id="quality-local-content"
+                                 class="d-none">
+
+                                <div id="quality-local-score"
+                                     class="quality-score mb-3">
+                                </div>
+
+                                <div class="quality-progress mb-4"
+                                     role="progressbar"
+                                     aria-label="Porcentaje de identificación local"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     aria-valuenow="0">
+
+                                    <div id="quality-local-bar"
+                                         class="quality-progress-fill">
+                                    </div>
+
+                                </div>
+
+                                <div id="quality-local-details"></div>
+
+                                <div class="quality-explanation">
+                                    Un registro de inversión representa
+                                    una posición del portafolio
+                                    en la fecha analizada.
+                                </div>
+
+                                <p id="quality-local-financial"
+                                   class="quality-note mt-3 mb-0">
+                                </p>
+
+                            </div>
+
+                        </article>
+                    </div>
+
+                    <!-- VALIDACIÓN INTERNACIONAL -->
+
+                    <div class="col-12 col-lg-6">
+
+                        <article class="dashboard-card quality-card p-4">
+
+                            <div class="d-flex justify-content-between
+                                        align-items-start gap-2 mb-3">
+
+                                <h3 class="section-title mb-0">
+                                    Validación financiera internacional
+                                </h3>
+
+                                <span class="badge text-bg-light border">
+                                    Internacional
+                                </span>
+
+                            </div>
+
+                            <p class="quality-description">
+                                Porcentaje de registros de inversión
+                                que cumplen las reglas para incluir
+                                sus valores en el análisis financiero.
+                            </p>
+
+                            <div id="quality-int-loading"
+                                 class="quality-state"
+                                 role="status">
+                                Cargando indicadores...
+                            </div>
+
+                            <div id="quality-int-content"
+                                 class="d-none">
+
+                                <div id="quality-int-score"
+                                     class="quality-score mb-3">
+                                </div>
+
+                                <div class="quality-progress mb-4"
+                                     role="progressbar"
+                                     aria-label="Porcentaje de aptitud financiera internacional"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     aria-valuenow="0">
+
+                                    <div id="quality-int-bar"
+                                         class="quality-progress-fill">
+                                    </div>
+
+                                </div>
+
+                                <div id="quality-int-details"></div>
+
+                                <div class="quality-explanation">
+                                    Un registro apto puede incluirse
+                                    en las agregaciones financieras
+                                    definidas por el proyecto.
+                                </div>
+
+                                <p class="quality-note mt-3 mb-0">
+                                    Este indicador mide aptitud
+                                    financiera, no identificación
+                                    en el catálogo.
+                                </p>
+
+                            </div>
+
+                        </article>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- NOTA METODOLÓGICA -->
+
+            <section class="mb-4">
+
+                <div class="alert alert-light border" role="note">
+
+                    <strong>Nota metodológica:</strong>
+
+                    Los valores corresponden a la última
+                    fecha disponible de cada cliente.
+
+                    Los portafolios local e internacional
+                    se presentan por separado y no
+                    se suman entre sí.
+
+                    Las posiciones que requieren revisión
+                    financiera no se incluyen en las
+                    agregaciones válidas.
+
+                    La identificación de activos locales
+                    y la aptitud financiera internacional
+                    son indicadores distintos y no deben
+                    compararse directamente.
+
+                </div>
+
+            </section>
+
+        {% else %}
+
+            <!-- SIN CLIENTE SELECCIONADO -->
+
+            <section class="dashboard-card empty-state mb-4"
+                     aria-label="Sin cliente seleccionado">
+
+                <h2 class="section-title">
+                    Selecciona un cliente para comenzar
+                </h2>
+
+                <p class="mb-0">
+                    Podrás consultar sus inversiones,
+                    valores reportados, distribución
+                    del portafolio, calidad de datos
+                    y fechas de actualización.
+                </p>
+
+            </section>
+
+        {% endif %}
+
+
+<!-- MODELO ANALITICO DE CLIENTES -->
+
+<section class="mb-4" id="analisis-clientes">
+
+    <div class="dashboard-card p-4">
+
+        <h2 class="section-title">
+            Análisis y segmentación de clientes
+        </h2>
+
+        <p class="text-muted">
+            Clasificación multidimensional según
+            concentración por macroactivo, variedad
+            de activos, mercado y perfil de riesgo.
+        </p>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Clientes analizados
+                    </p>
+                    <h3 id="segmentacion-total">--</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Concentración elevada
+                    </p>
+                    <h3 id="segmentacion-elevada">--</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Perfiles por revisar
+                    </p>
+                    <h3 id="segmentacion-perfiles">--</h3>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-5">
+
+                <h3 class="h6">
+                    Concentración por macroactivo
+                </h3>
+
+                <div style="height: 280px;">
+                    <canvas id="grafico-segmentacion"></canvas>
+                </div>
+
+            </div>
+
+            <div class="col-lg-7">
+
+                <h3 class="h6">
+                    Resultados por cliente
+                </h3>
+
+                <div class="table-responsive"
+                     style="max-height: 350px; overflow-y: auto;">
+
+                    <table class="table table-sm table-hover">
+
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Concentración</th>
+                                <th>Variedad</th>
+                                <th>Mercado</th>
+                                <th>Perfil</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-segmentacion">
+                            <tr>
+                                <td colspan="5">
+                                    Cargando análisis...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <p class="small text-muted mt-3 mb-0">
+            Segmentación exploratoria. La concentración
+            se calcula por macroactivo local y no
+            representa una evaluación integral del
+            riesgo de inversión.
+        </p>
+
+    </div>
+
+</section>
+
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+
+    <footer class="footer">
+        <div class="container">
+
+            <div class="d-flex flex-wrap
+                        justify-content-between gap-2">
+
+                <span>Investment Analytics</span>
+
+                <span>
+                    Proyecto de análisis de inversiones
+                </span>
+
+            </div>
+        </div>
+    </footer>
+
+    {% if cliente_seleccionado %}
+
+    <!-- CLIENTE PARA JAVASCRIPT -->
+
+    {{ cliente_seleccionado|json_script:"cliente-seleccionado-data" }}
+
+    <!-- FORMATO DE VALORES FINANCIEROS -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const formato = new Intl.NumberFormat("es-CO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            document.querySelectorAll(
+                "[data-financial-value]"
+            ).forEach(function (elemento) {
+
+                const texto = elemento.getAttribute(
+                    "data-financial-value"
+                );
+
+                // Django puede entregar punto o coma decimal
+                // según la configuración de idioma.
+
+                let valorTexto = texto.trim();
+
+                if (valorTexto.includes(",")) {
+                    valorTexto = valorTexto.replace(
+                        /\./g, ""
+                    ).replace(",", ".");
+                }
+
+                const numero = Number(valorTexto);
+
+                if (Number.isFinite(numero)) {
+                    elemento.textContent = formato.format(numero);
+                }
+            });
+
+        });
+    </script>
+
+    <!-- GRÁFICO DE DISTRIBUCIÓN -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            const loading = document.getElementById("chart-loading");
+            const errorBox = document.getElementById("chart-error");
+            const content = document.getElementById("chart-content");
+            const legend = document.getElementById("chart-legend");
+            const totalElement = document.getElementById("chart-total");
+            const canvas = document.getElementById("graficoMacroactivo");
+
+            const cliente = JSON.parse(
+                document.getElementById(
+                    "cliente-seleccionado-data"
+                ).textContent
+            );
+
+            const colores = [
+                "#4263eb",
+                "#f6c744",
+                "#19a7a0",
+                "#7b8aa8",
+                "#f28c65",
+                "#71a3ff",
+                "#9b86c9",
+                "#78b88b"
+            ];
+
+            const formatoNumero = new Intl.NumberFormat("es-CO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            const formatoPorcentaje = new Intl.NumberFormat("es-CO", {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            });
+
+            function mostrarMensaje(mensaje) {
+                loading.classList.add("d-none");
+                content.classList.add("d-none");
+                errorBox.textContent = mensaje;
+                errorBox.classList.remove("d-none");
+            }
+
+            try {
+
+                const url = "{% url 'distribucion_macroactivo' %}"
+                    + "?cliente=" + encodeURIComponent(cliente);
+
+                const respuesta = await fetch(url);
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        "No fue posible consultar la distribución."
+                    );
+                }
+
+                const datos = await respuesta.json();
+
+                const distribucion = Array.isArray(datos.distribucion)
+                    ? datos.distribucion
+                    : [];
+
+                const categoriasValidas = distribucion.filter(item => {
+                    return item.total_aba !== null
+                        && item.total_aba !== undefined
+                        && Number.isFinite(Number(item.total_aba))
+                        && Number(item.total_aba) > 0;
+                });
+
+                if (categoriasValidas.length === 0) {
+                    mostrarMensaje(
+                        "Este cliente no tiene valores ABA positivos " +
+                        "y válidos para representar en el gráfico."
+                    );
+                    return;
+                }
+
+                if (typeof Chart === "undefined") {
+                    throw new Error(
+                        "No se pudo cargar la biblioteca de gráficos."
+                    );
+                }
+
+                const etiquetas = categoriasValidas.map(
+                    item => item.macroactivo
+                );
+
+                const valores = categoriasValidas.map(
+                    item => Number(item.total_aba)
+                );
+
+                const total = valores.reduce(
+                    (acumulado, valor) => acumulado + valor,
+                    0
+                );
+
+                const coloresGrafico = etiquetas.map(
+                    (_, indice) => colores[indice % colores.length]
+                );
+
+                totalElement.textContent = formatoNumero.format(total);
+
+                categoriasValidas.forEach((item, indice) => {
+
+                    const valor = Number(item.total_aba);
+                    const porcentaje = (valor / total) * 100;
+
+                    const fila = document.createElement("div");
+                    fila.className = "chart-legend-item";
+
+                    const nombre = document.createElement("div");
+                    nombre.className = "chart-legend-name";
+
+                    const punto = document.createElement("span");
+                    punto.className = "chart-legend-dot";
+                    punto.style.backgroundColor = coloresGrafico[indice];
+
+                    const texto = document.createElement("span");
+                    texto.textContent = item.macroactivo;
+
+                    nombre.appendChild(punto);
+                    nombre.appendChild(texto);
+
+                    const numeros = document.createElement("div");
+                    numeros.className = "chart-legend-numbers";
+
+                    const porcentajeTexto = document.createElement("span");
+                    porcentajeTexto.className = "chart-legend-percent";
+                    porcentajeTexto.textContent =
+                        formatoPorcentaje.format(porcentaje) + "%";
+
+                    const valorTexto = document.createElement("span");
+                    valorTexto.className = "chart-legend-value";
+                    valorTexto.textContent = formatoNumero.format(valor);
+
+                    numeros.appendChild(porcentajeTexto);
+                    numeros.appendChild(valorTexto);
+
+                    fila.appendChild(nombre);
+                    fila.appendChild(numeros);
+
+                    legend.appendChild(fila);
+
+                });
+
+                new Chart(canvas, {
+
+                    type: "doughnut",
+
+                    data: {
+                        labels: etiquetas,
+                        datasets: [{
+                            data: valores,
+                            backgroundColor: coloresGrafico,
+                            borderColor: "#ffffff",
+                            borderWidth: 4,
+                            hoverOffset: 8,
+                            borderRadius: 5
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "72%",
+
+                        plugins: {
+
+                            legend: {
+                                display: false
+                            },
+
+                            tooltip: {
+                                backgroundColor: "#242424",
+                                padding: 14,
+                                cornerRadius: 10,
+
+                                callbacks: {
+                                    label: function(context) {
+
+                                        const valor = context.parsed;
+
+                                        const porcentaje =
+                                            (valor / total) * 100;
+
+                                        return [
+                                            "Valor ABA: " +
+                                            formatoNumero.format(valor),
+
+                                            "Participación: " +
+                                            formatoPorcentaje.format(
+                                                porcentaje
+                                            ) + "%"
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                loading.classList.add("d-none");
+                content.classList.remove("d-none");
+
+            } catch (error) {
+
+                console.error(
+                    "Error al cargar el gráfico:",
+                    error
+                );
+
+                mostrarMensaje(
+                    "No fue posible cargar el gráfico. " +
+                    "Verifica que Django esté funcionando " +
+                    "y que Chart.js esté disponible."
+                );
+            }
+        });
+    </script>
+
+    <!-- INDICADORES DE CALIDAD -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            const cliente = JSON.parse(
+                document.getElementById(
+                    "cliente-seleccionado-data"
+                ).textContent
+            );
+
+            const localLoading = document.getElementById(
+                "quality-local-loading"
+            );
+
+            const intLoading = document.getElementById(
+                "quality-int-loading"
+            );
+
+            const formato = new Intl.NumberFormat("es-CO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            function mostrarEstado(elemento, mensaje) {
+                elemento.textContent = mensaje;
+                elemento.classList.remove("d-none");
+            }
+
+            function agregarFila(contenedor, nombre, numero) {
+
+                const fila = document.createElement("div");
+                fila.className = "quality-stat";
+
+                const etiqueta = document.createElement("span");
+                etiqueta.className = "quality-stat-name";
+                etiqueta.textContent = nombre;
+
+                const valor = document.createElement("span");
+                valor.className = "quality-stat-number";
+                valor.textContent = String(numero);
+
+                fila.appendChild(etiqueta);
+                fila.appendChild(valor);
+
+                contenedor.appendChild(fila);
+            }
+
+            function actualizarProgreso(
+                prefijo,
+                porcentaje,
+                advertencia
+            ) {
+
+                document.getElementById(
+                    prefijo + "-score"
+                ).textContent = formato.format(porcentaje) + " %";
+
+                const barra = document.getElementById(
+                    prefijo + "-bar"
+                );
+
+                barra.style.width = porcentaje + "%";
+
+                if (advertencia) {
+                    barra.classList.add("warning");
+                } else {
+                    barra.classList.remove("warning");
+                }
+
+                barra.parentElement.setAttribute(
+                    "aria-valuenow",
+                    String(porcentaje)
+                );
+            }
+
+            try {
+
+                const url = "{% url 'calidad_portafolio' %}"
+                    + "?cliente=" + encodeURIComponent(cliente);
+
+                const respuesta = await fetch(url);
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        "Error HTTP " + respuesta.status
+                    );
+                }
+
+                const datos = await respuesta.json();
+
+                const locales = Array.isArray(datos.calidad_local)
+                    ? datos.calidad_local
+                    : [];
+
+                const internacionales =
+                    Array.isArray(datos.calidad_internacional)
+                    ? datos.calidad_internacional
+                    : [];
+
+                /* IDENTIFICACIÓN DE INVERSIONES LOCALES */
+
+                if (locales.length === 0) {
+
+                    mostrarEstado(
+                        localLoading,
+                        "Este cliente no tiene registros " +
+                        "de inversión en el portafolio local."
+                    );
+
+                } else {
+
+                    const total = locales.reduce(
+                        (suma, item) =>
+                            suma + Number(item.posiciones),
+                        0
+                    );
+
+                    const catalogadas = locales
+                        .filter(
+                            item => item.estado_activo === "CATALOGADO"
+                        )
+                        .reduce(
+                            (suma, item) =>
+                                suma + Number(item.posiciones),
+                            0
+                        );
+
+                    const porcentaje = total
+                        ? 100 * catalogadas / total
+                        : 0;
+
+                    actualizarProgreso(
+                        "quality-local",
+                        porcentaje,
+                        catalogadas < total
+                    );
+
+                    const detalles = document.getElementById(
+                        "quality-local-details"
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "Registros de inversión",
+                        total
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "Identificados en catálogo",
+                        catalogadas
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "Con observaciones de identificación",
+                        total - catalogadas
+                    );
+
+                    const nombres = {
+                        NO_CATALOGADO: "No encontrados en catálogo",
+                        SIN_CODIGO: "Sin código de identificación",
+                        REVISAR_ESTRUCTURA: "Requieren revisión estructural"
+                    };
+
+                    locales
+                        .filter(
+                            item => item.estado_activo !== "CATALOGADO"
+                        )
+                        .forEach(item => {
+
+                            agregarFila(
+                                detalles,
+                                nombres[item.estado_activo]
+                                    || item.estado_activo
+                                    || "Sin clasificar",
+                                item.posiciones
+                            );
+
+                        });
+
+                    const validasABA = locales
+                        .filter(
+                            item => item.estado_aba === "VALIDO"
+                        )
+                        .reduce(
+                            (suma, item) =>
+                                suma + Number(item.posiciones),
+                            0
+                        );
+
+                    document.getElementById(
+                        "quality-local-financial"
+                    ).textContent =
+                        "Registros con valor ABA válido: " +
+                        validasABA + " de " + total +
+                        ". La identificación del activo y " +
+                        "la validación de su valor financiero " +
+                        "son controles diferentes.";
+
+                    localLoading.classList.add("d-none");
+
+                    document.getElementById(
+                        "quality-local-content"
+                    ).classList.remove("d-none");
+
+                }
+
+                /* VALIDACIÓN FINANCIERA INTERNACIONAL */
+
+                if (internacionales.length === 0) {
+
+                    mostrarEstado(
+                        intLoading,
+                        "Este cliente no tiene registros " +
+                        "de inversión en el portafolio internacional."
+                    );
+
+                } else {
+
+                    const total = internacionales.reduce(
+                        (suma, item) =>
+                            suma + Number(item.posiciones),
+                        0
+                    );
+
+                    const aptas = internacionales
+                        .filter(
+                            item => item.apto_agregacion === true
+                        )
+                        .reduce(
+                            (suma, item) =>
+                                suma + Number(item.posiciones),
+                            0
+                        );
+
+                    const porcentaje = total
+                        ? 100 * aptas / total
+                        : 0;
+
+                    actualizarProgreso(
+                        "quality-int",
+                        porcentaje,
+                        aptas < total
+                    );
+
+                    const detalles = document.getElementById(
+                        "quality-int-details"
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "Registros de inversión",
+                        total
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "Aptos para análisis financiero",
+                        aptas
+                    );
+
+                    agregarFila(
+                        detalles,
+                        "No aptos para agregación",
+                        total - aptas
+                    );
+
+                    internacionales
+                        .filter(
+                            item => item.apto_agregacion !== true
+                        )
+                        .forEach(item => {
+
+                            agregarFila(
+                                detalles,
+                                "Estado: " +
+                                (
+                                    item.estado_financiero
+                                    || "Sin clasificar"
+                                ),
+                                item.posiciones
+                            );
+
+                        });
+
+                    intLoading.classList.add("d-none");
+
+                    document.getElementById(
+                        "quality-int-content"
+                    ).classList.remove("d-none");
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Error al consultar calidad:",
+                    error
+                );
+
+                mostrarEstado(
+                    localLoading,
+                    "No fue posible consultar la calidad local."
+                );
+
+                mostrarEstado(
+                    intLoading,
+                    "No fue posible consultar la calidad internacional."
+                );
+
+            }
+        });
+    </script>
+
+    {% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const tabla = document.getElementById("tabla-segmentacion");
+
+    try {
+        const respuesta = await fetch(
+            "{% url 'segmentacion_clientes' %}"
+        );
+
+        if (!respuesta.ok) {
+            throw new Error("Error HTTP " + respuesta.status);
+        }
+
+        const datos = await respuesta.json();
+        const clientes = datos.clientes;
+
+        const elevada = clientes.filter(
+            c => c.segmento_concentracion === "CONCENTRACION_ELEVADA"
+        ).length;
+
+        const equilibrada = clientes.filter(
+            c => c.segmento_concentracion === "DISTRIBUCION_EQUILIBRADA"
+        ).length;
+
+        const sinCalcular = clientes.filter(
+            c => c.segmento_concentracion === "SIN_CONCENTRACION_CALCULABLE"
+        ).length;
+
+        const perfilesRevisar = clientes.filter(
+            c => [
+                "SIN DEFINIR",
+                "NO_EN_CATALOGO",
+                "PERFIL_INCONSISTENTE"
+            ].includes(c.perfil_riesgo)
+        ).length;
+
+        document.getElementById("segmentacion-total").textContent =
+            datos.total_clientes;
+
+        document.getElementById("segmentacion-elevada").textContent =
+            elevada;
+
+        document.getElementById("segmentacion-perfiles").textContent =
+            perfilesRevisar;
+
+        // GRÁFICO
+
+        const canvas = document.getElementById("grafico-segmentacion");
+
+        if (typeof Chart !== "undefined") {
+            new Chart(canvas, {
+                type: "doughnut",
+                data: {
+                    labels: [
+                        "Concentración elevada",
+                        "Distribución equilibrada",
+                        "Sin concentración calculable"
+                    ],
+                    datasets: [{
+                        data: [elevada, equilibrada, sinCalcular],
+                        backgroundColor: [
+                            "#4263eb",
+                            "#20a779",
+                            "#e9ad43"
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    }
+                }
+            });
+        }
+
+        // TABLA DE CLIENTES
+
+        tabla.innerHTML = "";
+
+        clientes.forEach(cliente => {
+
+            const fila = document.createElement("tr");
+
+            const valores = [
+                cliente.id_sistema_cliente,
+                cliente.concentracion_porcentaje === null
+                    ? "No calculable"
+                    : cliente.concentracion_porcentaje + "%",
+                cliente.segmento_variedad.replaceAll("_", " "),
+                cliente.segmento_mercado.replaceAll("_", " "),
+                cliente.perfil_riesgo.replaceAll("_", " ")
+            ];
+
+            valores.forEach(valor => {
+                const celda = document.createElement("td");
+                celda.textContent = valor;
+                fila.appendChild(celda);
+            });
+
+            tabla.appendChild(fila);
+        });
+
+    } catch (error) {
+
+        console.error("Error en segmentación:", error);
+
+        tabla.innerHTML =
+            '<tr><td colspan="5">No fue posible cargar la segmentación.</td></tr>';
+    }
+
+});
+</script>
+
+</body>
+</html>
