@@ -255,3 +255,48 @@ def concentracion_internacional(request):
         "clientes": clientes
     }, json_dumps_params={"default": str})
 
+
+def radar_clientes(request):
+    estado = request.GET.get("estado", "")
+
+    estados_validos = ["Estable", "Oportunidad", "Seguimiento"]
+
+    if estado and estado not in estados_validos:
+        return JsonResponse({
+            "error": "Estado de radar no válido."
+        }, status=400)
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                id_sistema_cliente,
+                fecha_ultima_observacion,
+                aba_actual_cop,
+                cantidad_activos,
+                variacion_anterior_pct,
+                variacion_5_observaciones_pct,
+                estado_radar
+            FROM analytics.vw_radar_clientes
+            WHERE (%s = '' OR estado_radar = %s)
+            ORDER BY
+                CASE estado_radar
+                    WHEN 'Seguimiento' THEN 1
+                    WHEN 'Oportunidad' THEN 2
+                    ELSE 3
+                END,
+                aba_actual_cop DESC
+        """, [estado, estado])
+
+        columnas = [col[0] for col in cursor.description]
+
+        clientes = [
+            dict(zip(columnas, fila))
+            for fila in cursor.fetchall()
+        ]
+
+    return JsonResponse({
+        "total_clientes": len(clientes),
+        "filtro_estado": estado or "Todos",
+        "clientes": clientes
+    }, json_dumps_params={"default": str})
+

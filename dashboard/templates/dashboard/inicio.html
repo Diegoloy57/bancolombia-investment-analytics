@@ -954,6 +954,158 @@
         {% endif %}
 
 
+<!-- RADAR DE CLIENTES -->
+
+<section class="mb-4" id="radar-clientes">
+
+    <div class="dashboard-card p-4">
+
+        <div class="d-flex flex-wrap justify-content-between
+                    align-items-start gap-3 mb-4">
+
+            <div>
+                <h2 class="section-title mb-2">
+                    Radar de clientes
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Seguimiento de variaciones históricas del ABA
+                    para identificar clientes que requieren revisión.
+                </p>
+            </div>
+
+            <span class="badge text-bg-light border p-2">
+                Análisis histórico
+            </span>
+
+        </div>
+
+        <!-- INDICADORES -->
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-12 col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Clientes analizados
+                    </p>
+                    <h3 id="radar-total">--</h3>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Estables
+                    </p>
+                    <h3 id="radar-estables">--</h3>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Aumento del ABA
+                    </p>
+                    <h3 id="radar-oportunidades"
+                        class="text-success">--</h3>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="border rounded p-3 h-100">
+                    <p class="text-muted mb-1">
+                        Disminución del ABA
+                    </p>
+                    <h3 id="radar-seguimiento"
+                        class="text-danger">--</h3>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FILTRO -->
+
+        <div class="row g-3 align-items-end mb-3">
+
+            <div class="col-12 col-md-5">
+
+                <label for="radar-filtro"
+                       class="form-label fw-semibold">
+                    Filtrar por comportamiento
+                </label>
+
+                <select id="radar-filtro" class="form-select">
+                    <option value="">Todos los clientes</option>
+                    <option value="Seguimiento">
+                        Disminución del ABA
+                    </option>
+                    <option value="Oportunidad">
+                        Aumento del ABA
+                    </option>
+                    <option value="Estable">
+                        Estables
+                    </option>
+                </select>
+
+            </div>
+
+            <div class="col-12 col-md-7">
+                <p id="radar-conteo"
+                   class="small text-muted mb-2">
+                    Cargando clientes...
+                </p>
+            </div>
+
+        </div>
+
+        <!-- TABLA -->
+
+        <div class="table-responsive"
+             style="max-height: 420px; overflow-y: auto;">
+
+            <table class="table table-sm table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Última fecha</th>
+                        <th>ABA actual</th>
+                        <th>Variación anterior</th>
+                        <th>Variación 5 obs.</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabla-radar">
+                    <tr>
+                        <td colspan="7">
+                            Cargando Radar de Clientes...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <p class="small text-muted mt-3 mb-0">
+            Clasificación descriptiva basada en la última
+            observación disponible por cliente.
+            Aumento: variación superior al 1 %.
+            Disminución: variación inferior al -1 %.
+            Estable: variación entre -1 % y +1 %.
+            El ABA puede cambiar por aportes, retiros
+            o valoración de activos. No representa una
+            predicción validada ni una recomendación
+            automática de inversión.
+        </p>
+
+    </div>
+
+</section>
+
 <!-- MODELO ANALITICO DE CLIENTES -->
 
 <section class="mb-4" id="analisis-clientes">
@@ -2027,6 +2179,157 @@ document.addEventListener("DOMContentLoaded", async function () {
             '<tr><td colspan="5">' +
             'No fue posible cargar el análisis.' +
             '</td></tr>';
+    }
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const tabla = document.getElementById("tabla-radar");
+    const filtro = document.getElementById("radar-filtro");
+    const conteo = document.getElementById("radar-conteo");
+
+    const formatoCOP = new Intl.NumberFormat("es-CO", {
+        maximumFractionDigits: 2
+    });
+
+    const formatoPorcentaje = new Intl.NumberFormat("es-CO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    function crearCelda(fila, valor) {
+        const celda = document.createElement("td");
+        celda.textContent = valor;
+        fila.appendChild(celda);
+        return celda;
+    }
+
+    try {
+        const respuesta = await fetch(
+            "{% url 'radar_clientes' %}"
+        );
+
+        if (!respuesta.ok) {
+            throw new Error("Error HTTP " + respuesta.status);
+        }
+
+        const datos = await respuesta.json();
+        const clientes = datos.clientes;
+
+        // Indicadores generales
+        document.getElementById("radar-total").textContent =
+            clientes.length;
+
+        document.getElementById("radar-estables").textContent =
+            clientes.filter(c => c.estado_radar === "Estable").length;
+
+        document.getElementById("radar-oportunidades").textContent =
+            clientes.filter(c => c.estado_radar === "Oportunidad").length;
+
+        document.getElementById("radar-seguimiento").textContent =
+            clientes.filter(c => c.estado_radar === "Seguimiento").length;
+
+        function mostrarClientes() {
+
+            const estado = filtro.value;
+
+            const filtrados = estado
+                ? clientes.filter(c => c.estado_radar === estado)
+                : clientes;
+
+            tabla.replaceChildren();
+
+            conteo.textContent =
+                "Mostrando " + filtrados.length +
+                " de " + clientes.length + " clientes.";
+
+            if (filtrados.length === 0) {
+                const fila = document.createElement("tr");
+                crearCelda(fila, "No hay clientes en esta categoría.")
+                    .colSpan = 7;
+                tabla.appendChild(fila);
+                return;
+            }
+
+            filtrados.forEach(cliente => {
+
+                const fila = document.createElement("tr");
+
+                crearCelda(fila, cliente.id_sistema_cliente);
+                crearCelda(fila, cliente.fecha_ultima_observacion);
+
+                crearCelda(
+                    fila,
+                    formatoCOP.format(Number(cliente.aba_actual_cop))
+                );
+
+                crearCelda(
+                    fila,
+                    formatoPorcentaje.format(
+                        Number(cliente.variacion_anterior_pct)
+                    ) + " %"
+                );
+
+                crearCelda(
+                    fila,
+                    formatoPorcentaje.format(
+                        Number(cliente.variacion_5_observaciones_pct)
+                    ) + " %"
+                );
+
+                const estadoCelda = document.createElement("td");
+                const etiqueta = document.createElement("span");
+
+                etiqueta.className = "badge " + (
+                    cliente.estado_radar === "Seguimiento"
+                        ? "text-bg-danger"
+                        : cliente.estado_radar === "Oportunidad"
+                        ? "text-bg-success"
+                        : "text-bg-secondary"
+                );
+
+                etiqueta.textContent = cliente.estado_radar;
+                estadoCelda.appendChild(etiqueta);
+                fila.appendChild(estadoCelda);
+
+                // Acceso al portafolio individual
+                const accion = document.createElement("td");
+                const enlace = document.createElement("a");
+
+                enlace.href =
+                    "{% url 'inicio' %}?cliente=" +
+                    encodeURIComponent(cliente.id_sistema_cliente);
+
+                enlace.textContent = "Ver portafolio";
+                enlace.className = "btn btn-sm btn-outline-primary";
+
+                accion.appendChild(enlace);
+                fila.appendChild(accion);
+
+                tabla.appendChild(fila);
+            });
+        }
+
+        filtro.addEventListener("change", mostrarClientes);
+
+        mostrarClientes();
+
+    } catch (error) {
+
+        console.error("Error en Radar:", error);
+
+        tabla.replaceChildren();
+
+        const fila = document.createElement("tr");
+        crearCelda(
+            fila,
+            "No fue posible cargar el Radar de Clientes."
+        ).colSpan = 7;
+
+        tabla.appendChild(fila);
+        conteo.textContent = "Error al consultar los datos.";
     }
 });
 </script>
